@@ -74,7 +74,7 @@ class MyPageFragment : Fragment() {
     private var sendLat by Delegates.notNull<Double>()
     private var sendLon by Delegates.notNull<Double>()
 
-    private val ACTION_SEND_FILE = "app-release.apk"
+    private val ACTION_SEND_FILE = "goodnews.apk"
 
     private var realmaddInfo: String? = null
 
@@ -269,7 +269,7 @@ class MyPageFragment : Fragment() {
         dialogBinding.dialogMypagePhoneEdit.text = realmPhone.toString()
         dialogBinding.dialogMypagebirthday.text = realmBirth
         dialogBinding.dialogMypageBloodEdit.text = realmBloodType
-        if (realmGender == "모름") {
+        if (realmGender == "-") {
             noGenderSelection(dialogBinding)
         }
         if (realmaddInfo != null) {
@@ -286,9 +286,9 @@ class MyPageFragment : Fragment() {
         initDataDialog(binding)
 
         var gender = realmGender
-        if (gender == "남자") {
+        if (gender == "남") {
             updateGenderSelection("남자", binding)
-        } else if (gender == "여자") {
+        } else if (gender == "여") {
             updateGenderSelection("여자", binding)
         } else {
             noGenderSelection(binding)
@@ -376,7 +376,7 @@ class MyPageFragment : Fragment() {
 
         binding.dialogMypageWoman.backgroundTintList = colorStateList
         binding.dialogMypageMan.backgroundTintList = colorStateList
-        sendGender = "모름"
+        sendGender = "-"
     }
 
     // 성별 선택
@@ -399,7 +399,12 @@ class MyPageFragment : Fragment() {
 //            findLatest(items[0])?.gender = selectedGender
 //            realmGender = selectedGender
 //        }
-        sendGender = selectedGender
+        if(selectedGender == "여자"){
+            sendGender = "여"
+        }else if(selectedGender == "남자"){
+            sendGender = "남"
+        }
+//        sendGender = selectedGender
     }
 
     //생년월일 변경하기
@@ -459,13 +464,13 @@ class MyPageFragment : Fragment() {
         val monthPicker = birthDialogBinding.monthPicker //월 picker
         val dayPicker = birthDialogBinding.dayPicker //일 picker
         val requestBirth = birthDialogBinding.requestBirth //수정 버튼
-
+        val calendar = Calendar.getInstance()
         if (realmBirth == null) {
-            selectedYear = "2000"
-            selectedMonth = "01"
-            selectedDay = "01"
+            selectedYear = calendar.get(Calendar.YEAR).toString()
+            selectedMonth = (calendar.get(Calendar.MONTH) + 1).toString()
+            selectedDay = calendar.get(Calendar.DAY_OF_MONTH).toString()
             myAge = 0
-            sendBirthdate = "2000년 01월 01일"
+            sendBirthdate = "${selectedYear}년 ${selectedMonth}월 ${selectedDay}일"
         } else {
             val (savedYear, savedMonth, savedDay) = realmBirth!!.split("년 ", "월 ", "일")
                 .map { it.trim() }
@@ -487,7 +492,7 @@ class MyPageFragment : Fragment() {
                 //만 나이 계산
                 val currentYear = Calendar.getInstance().get(Calendar.YEAR)
                 myAge = currentYear - (selectedYear?.toInt() ?: 0)
-//                preferencesUtil.setString("age", "만 ${myAge}세")
+                preferencesUtil.setInt("age", myAge)
             }
         }
 
@@ -550,8 +555,8 @@ class MyPageFragment : Fragment() {
         val requestBlood = bloodDialogBinding.requestBlood
 
         if (realmBloodType == null) {
-            selectedRh = "모름"
-            selectedBlood = "A형"
+            selectedRh = "Rh"
+            selectedBlood = "-형"
         } else {
             val parts = realmBloodType!!.split(" ")
             if(parts.size == 2){
@@ -560,8 +565,8 @@ class MyPageFragment : Fragment() {
                 selectedRh = savedRh
                 selectedBlood = savedBlood
             }else{
-                selectedRh = "모름"
-                selectedBlood = "A형"
+                selectedRh = "Rh"
+                selectedBlood = "-형"
             }
         }
 
@@ -573,7 +578,7 @@ class MyPageFragment : Fragment() {
             value = rhs.indexOf(selectedRh) //인덱스 값 저장
             setOnValueChangedListener { picker, oldVal, newVal ->
                 // 선택된 값을 사용 시 화면 업데이트
-                selectedRh = if (rhs[newVal] == "모름") "Rh불명" else rhs[newVal]
+                selectedRh = if (rhs[newVal] == "Rh") "Rh불명" else rhs[newVal]
             }
         }
 
@@ -584,7 +589,7 @@ class MyPageFragment : Fragment() {
             wrapSelectorWheel = false
             value = blood.indexOf(selectedBlood)
             setOnValueChangedListener { picker, oldVal, newVal ->
-                selectedBlood = blood[newVal]
+                selectedBlood = if(blood[newVal] == "-형") "-형" else blood[newVal]
             }
         }
 
@@ -621,8 +626,8 @@ class MyPageFragment : Fragment() {
 
     private fun startMapFileDownload() {
         Log.v("mypagefragment","지도 다운로드 함수 호출")
-        val url = "https://saveurlife.kr/images/7_15_korea-001.sqlite"
-        val fileName = "7_15_korea-001.sqlite"
+        val url = "https://saveurlife.kr/images/7_15_korea.sqlite"
+        val fileName = "7_15_korea.sqlite"
 
         mapDownloader.downloadFile(url, fileName)
     }

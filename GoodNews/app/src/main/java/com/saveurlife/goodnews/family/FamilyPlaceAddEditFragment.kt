@@ -1,8 +1,8 @@
 package com.saveurlife.goodnews.family
 
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
@@ -21,27 +21,21 @@ import com.saveurlife.goodnews.MapsFragment
 import com.saveurlife.goodnews.R
 import com.saveurlife.goodnews.api.FamilyAPI
 import com.saveurlife.goodnews.api.PlaceDetailInfo
-import com.saveurlife.goodnews.api.WaitInfo
 import com.saveurlife.goodnews.databinding.FragmentFamilyPlaceAddEditBinding
 import com.saveurlife.goodnews.family.FamilyFragment.Mode
 import com.saveurlife.goodnews.models.FamilyPlace
 import com.saveurlife.goodnews.models.Member
+import com.saveurlife.goodnews.service.DeviceStateService
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 
-class FamilyPlaceAddEditFragment : DialogFragment() {
-
-    // FamilyServiceCallback 인터페이스 정의
-    interface FamilyServiceCallback {
-        fun onSuccess(placeId: String)
-        fun onFailure(error: String)
-    }
+// 가족 신청 추가
+class FamilyPlaceAddEditFragment(private val familyFragment: FamilyFragment, private val context: Context) : DialogFragment() {
 
     private lateinit var binding: FragmentFamilyPlaceAddEditBinding
     private lateinit var geocoder: Geocoder
 
     private lateinit var mapsFragment: MapsFragment
-    private lateinit var realm: Realm
     private var familyAPI = FamilyAPI()
 
     // 제출 전에 담아둘 변수
@@ -107,12 +101,12 @@ class FamilyPlaceAddEditFragment : DialogFragment() {
         if (::binding.isInitialized) {
             data?.let {
                 // 데이터 UI에 적용
-                binding?.readModeNickname?.text = it.name
-                binding?.readModeAddress?.text = it.address
+                binding.readModeNickname.text = it.name
+                binding.readModeAddress.text = it.address
             }
         } else {
             // binding이 초기화되지 않은 경우에 대한 처리
-            // 예: Log.e("MyFragment", "Binding is not initialized.")
+            Log.e("MyFragment", "Binding is not initialized.")
         }
     }
 
@@ -132,6 +126,21 @@ class FamilyPlaceAddEditFragment : DialogFragment() {
                 hint = "주소를 검색해 주세요."
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             }
+
+        // 토글버튼
+        binding.placeStatusSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                // 토글 버튼이 꺼진 상태 (안전 상태)
+                binding.dangerTextView.visibility = View.GONE
+                binding.safeTextView.visibility = View.VISIBLE
+            } else {
+                // 토글 버튼이 켜진 상태 (위험 상태)
+                binding.dangerTextView.visibility = View.VISIBLE
+                binding.safeTextView.visibility = View.GONE
+            }
+        }
+
+        val deviceStateService = DeviceStateService()
 
         // 등록 버튼 눌렀을 때
         binding.meetingPlaceAddSubmit.setOnClickListener {
@@ -162,17 +171,25 @@ class FamilyPlaceAddEditFragment : DialogFragment() {
                 }
 
                 Mode.ADD -> {
-                    addNewPlace(seqNumber)
-                    dismiss()
+                    if(deviceStateService.isNetworkAvailable(requireContext())){
+                        addNewPlace(seqNumber)
+                        dismiss()
+                    }else{
+                        Toast.makeText(context, "인터넷 연결이 불안정합니다.", Toast.LENGTH_SHORT).show()
+                    }
                 }
 
                 Mode.EDIT -> {
-                    updatePlace(seqNumber)
-                    dismiss()
+                    if(deviceStateService.isNetworkAvailable(requireContext())){
+                        updatePlace(seqNumber)
+                        dismiss()
+                    }else{
+                        Toast.makeText(context, "인터넷 연결이 불안정합니다.", Toast.LENGTH_SHORT).show()
+                    }
                 }
 
                 else -> {
-
+                    Log.d("FamilyPlaceError", "어랏? 여기 들어오면 안되는 건데")
                 }
             }
 
@@ -187,6 +204,16 @@ class FamilyPlaceAddEditFragment : DialogFragment() {
 
     // 장소 정보 업데이트 (EDIT 모드)
     private fun updatePlace(seq: Int?) {
+        val memberId = getMemberId()
+
+        //업데이트 로직 구현
+        seq.let {
+            tempFamilyPlace?.let { familyPlace ->
+//                familyAPI.getFamilyUpdatePlaceInfo(
+
+//                )
+            }
+        }
 
     }
 
@@ -194,6 +221,7 @@ class FamilyPlaceAddEditFragment : DialogFragment() {
     private fun addNewPlace(seq: Int) {
         // 서버에 먼저 보내고, placeId 얻어온 다음에 Realm 저장 진행해야됨!!!
         val memberId = getMemberId()
+
         seq.let {
             tempFamilyPlace?.let { place ->
                 // FamilyService의 인스턴스를 사용하여 함수 호출
@@ -214,6 +242,9 @@ class FamilyPlaceAddEditFragment : DialogFragment() {
                                 place.longitude,
                                 seq,
                             )
+                            // 저장 뒤 업데이트 요청
+
+                            familyFragment.fetchAll()
                         }
 
                         override fun onFailure(error: String) {

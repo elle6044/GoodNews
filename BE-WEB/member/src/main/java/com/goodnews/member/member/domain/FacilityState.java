@@ -1,13 +1,11 @@
-package com.ssafy.goodnews.map.domain;
+package com.goodnews.member.member.domain;
 
-import com.ssafy.goodnews.common.domain.BaseCreateEntity;
-import com.ssafy.goodnews.common.domain.BaseEntity;
-import com.ssafy.goodnews.map.dto.request.MapRegistFacilityRequestDto;
+import com.goodnews.member.member.dto.request.facility.MapRegistFacilityRequestDto;
+import com.goodnews.member.common.domain.BaseEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,7 +18,7 @@ import java.time.format.DateTimeFormatter;
 @Entity
 @NoArgsConstructor
 @ToString
-public class FacilityState extends BaseCreateEntity {
+public class FacilityState extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +30,7 @@ public class FacilityState extends BaseCreateEntity {
     private Double lon;
 
     private LocalDateTime lastModifiedDate;
+    private LocalDateTime createdDate;
 
     @Builder
     public FacilityState(MapRegistFacilityRequestDto mapRegistFacilityRequestDto) {
@@ -40,11 +39,13 @@ public class FacilityState extends BaseCreateEntity {
         this.lat = mapRegistFacilityRequestDto.getLat();
         this.lon = mapRegistFacilityRequestDto.getLon();
         this.lastModifiedDate = LocalDateTime.parse(mapRegistFacilityRequestDto.getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        this.createdDate = LocalDateTime.now();
     }
 
     public void updateState(MapRegistFacilityRequestDto mapRegistFacilityRequestDto) {
         this.buttonType = mapRegistFacilityRequestDto.isButtonType();
         this.text = mapRegistFacilityRequestDto.getText();
         this.lastModifiedDate = LocalDateTime.parse(mapRegistFacilityRequestDto.getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        this.createdDate = LocalDateTime.now();
     }
 }

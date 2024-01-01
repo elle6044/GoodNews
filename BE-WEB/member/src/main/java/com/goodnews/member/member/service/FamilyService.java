@@ -1,29 +1,29 @@
-package com.ssafy.goodnews.member.service;
+package com.goodnews.member.member.service;
 
-import com.ssafy.goodnews.common.dto.BaseResponseDto;
-import com.ssafy.goodnews.common.exception.validator.FamilyValidator;
-import com.ssafy.goodnews.common.exception.validator.MemberValidator;
-import com.ssafy.goodnews.member.domain.Family;
-import com.ssafy.goodnews.member.domain.FamilyMember;
-import com.ssafy.goodnews.member.domain.FamilyPlace;
-import com.ssafy.goodnews.member.domain.Member;
-import com.ssafy.goodnews.member.dto.request.family.FamilyPlaceCanuseDto;
-import com.ssafy.goodnews.member.dto.request.family.FamilyPlaceUpdateRequestDto;
-import com.ssafy.goodnews.member.dto.request.family.FamilyRegistPlaceRequestDto;
-import com.ssafy.goodnews.member.dto.request.family.FamilyRegistRequestDto;
-import com.ssafy.goodnews.member.dto.request.member.MemberFirstLoginRequestDto;
-import com.ssafy.goodnews.member.dto.request.member.MemberRegistFamilyRequestDto;
-import com.ssafy.goodnews.member.dto.response.family.FamilyInviteResponseDto;
-import com.ssafy.goodnews.member.dto.response.family.FamilyPlaceDetailResponseDto;
-import com.ssafy.goodnews.member.dto.response.family.FamilyPlaceInfoResponseDto;
-import com.ssafy.goodnews.member.dto.response.family.FamilyRegistPlaceResponseDto;
-import com.ssafy.goodnews.member.dto.response.member.MemberRegistFamilyResposneDto;
-import com.ssafy.goodnews.member.dto.response.member.MemberResponseDto;
-import com.ssafy.goodnews.member.repository.FamilyMemberRepository;
-import com.ssafy.goodnews.member.repository.FamilyPlaceRepository;
-import com.ssafy.goodnews.member.repository.FamilyRepository;
-import com.ssafy.goodnews.member.repository.MemberRepository;
-import com.ssafy.goodnews.member.repository.querydsl.MemberQueryDslRepository;
+import com.goodnews.member.common.dto.BaseResponseDto;
+import com.goodnews.member.common.exception.validator.FamilyValidator;
+import com.goodnews.member.member.dto.request.family.FamilyPlaceCanuseDto;
+import com.goodnews.member.member.dto.request.family.FamilyPlaceUpdateRequestDto;
+import com.goodnews.member.member.dto.request.family.FamilyRegistRequestDto;
+import com.goodnews.member.member.dto.response.family.FamilyInviteResponseDto;
+import com.goodnews.member.member.dto.response.family.FamilyPlaceDetailResponseDto;
+import com.goodnews.member.member.dto.response.family.FamilyPlaceInfoResponseDto;
+import com.goodnews.member.member.dto.response.family.FamilyRegistPlaceResponseDto;
+import com.goodnews.member.member.dto.response.member.MemberResponseDto;
+import com.goodnews.member.common.exception.validator.MemberValidator;
+import com.goodnews.member.member.domain.Family;
+import com.goodnews.member.member.domain.FamilyMember;
+import com.goodnews.member.member.domain.FamilyPlace;
+import com.goodnews.member.member.domain.Member;
+import com.goodnews.member.member.dto.request.family.FamilyRegistPlaceRequestDto;
+import com.goodnews.member.member.dto.request.member.MemberFirstLoginRequestDto;
+import com.goodnews.member.member.dto.request.member.MemberRegistFamilyRequestDto;
+import com.goodnews.member.member.dto.response.member.MemberRegistFamilyResposneDto;
+import com.goodnews.member.member.repository.FamilyMemberRepository;
+import com.goodnews.member.member.repository.FamilyPlaceRepository;
+import com.goodnews.member.member.repository.FamilyRepository;
+import com.goodnews.member.member.repository.MemberRepository;
+import com.goodnews.member.member.repository.querydsl.MemberQueryDslRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,8 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static com.ssafy.goodnews.member.domain.QFamilyMember.familyMember;
 
 @Service
 @RequiredArgsConstructor
@@ -158,22 +156,7 @@ public class FamilyService {
         Optional<FamilyMember> familyId = memberQueryDslRepository.findFamilyId(familyRegistPlaceRequestDto.getMemberId());
         familyValidator.checkFamily(familyId,familyRegistPlaceRequestDto.getMemberId());
         List<FamilyPlace> findFamilyPlace = familyPlaceRepository.findByFamilyFamilyId(familyId.get().getFamily().getFamilyId());
-
-        if (findFamilyPlace.isEmpty()) {
-            return BaseResponseDto.builder()
-                    .success(true)
-                    .message("가족 모임 장소 동록했습니다")
-                    .data(FamilyRegistPlaceResponseDto.builder()
-                            .familyPlace(familyPlaceRepository.save(FamilyPlace.builder()
-                                    .name(familyRegistPlaceRequestDto.getName())
-                                    .lat(familyRegistPlaceRequestDto.getLat())
-                                    .lon(familyRegistPlaceRequestDto.getLon())
-                                    .canuse(true)
-                                    .family(familyId.get().getFamily())
-                                    .build()))
-                            .build())
-                    .build();
-        }
+        familyValidator.checkSeq(familyRegistPlaceRequestDto.getSeq(), familyRegistPlaceRequestDto.getMemberId());
         familyValidator.checkFamilyPlace(findFamilyPlace);
         return BaseResponseDto.builder()
                 .success(true)
@@ -185,12 +168,14 @@ public class FamilyService {
                                 .lon(familyRegistPlaceRequestDto.getLon())
                                 .canuse(true)
                                 .family(familyId.get().getFamily())
-                                .seq(findFamilyPlace.get(findFamilyPlace.size()-1).getSeq())
+                                .seq(familyRegistPlaceRequestDto.getSeq())
+                                .address(familyRegistPlaceRequestDto.getAddress())
                                 .build()))
                         .build())
                 .build();
 
-//        return null;
+
+
     }
 
     @Transactional(readOnly = true)
